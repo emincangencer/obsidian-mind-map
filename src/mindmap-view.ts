@@ -100,7 +100,7 @@ export default class MindmapView extends ItemView {
             mmView.linkedLeaf = undefined;
             return;
         }
-        const mdLinkedLeaf = mmView.workspace.getGroupLeaves(group).filter(l => l.view.getViewType() === MM_VIEW_TYPE)[0];
+        const mdLinkedLeaf = mmView.workspace.getGroupLeaves(group).filter(l => l.view.getViewType() === MD_VIEW_TYPE)[0];
         mmView.linkedLeaf = mdLinkedLeaf;
         this.checkAndUpdate();
     }
