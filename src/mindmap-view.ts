@@ -144,11 +144,16 @@ export default class MindmapView extends ItemView {
     }
 
     readFilePath() {
-        const fileInfo = (this.getLeafTarget().view as any).file;
-        const pathHasChanged = this.filePath != fileInfo.path;
-        this.filePath = fileInfo.path;
-        this.fileName = fileInfo.basename;
-        return pathHasChanged;
+        const targetLeaf = this.getLeafTarget();
+        if (targetLeaf && targetLeaf.view && targetLeaf.view.getViewType() === MD_VIEW_TYPE) {
+            const markdownView = targetLeaf.view as any;
+            if (markdownView.file && this.filePath !== markdownView.file.path) {
+                this.filePath = markdownView.file.path;
+                this.fileName = markdownView.file.basename;
+                return true;
+            }
+        }
+        return false;
     }
     
     getLeafTarget() {
@@ -159,13 +164,24 @@ export default class MindmapView extends ItemView {
     }
 
     async readMarkDown() {
-        let md = await this.app.vault.adapter.read(this.filePath);
-        if(md.startsWith('---')) {
-            md = md.replace(FRONT_MATTER_REGEX, '');
+        if (!this.filePath) {
+            return false;
         }
-        const markDownHasChanged = this.currentMd != md;
-        this.currentMd = md;
-        return markDownHasChanged;
+        try {
+            let md = await this.app.vault.adapter.read(this.filePath);
+            if(md.startsWith('---')) {
+                md = md.replace(FRONT_MATTER_REGEX, '');
+            }
+            const markDownHasChanged = this.currentMd != md;
+            this.currentMd = md;
+            return markDownHasChanged;
+        } catch (error) {
+            console.error(`Error reading file ${this.filePath}:`, error);
+            this.currentMd = '';
+            this.filePath = undefined;
+            this.fileName = undefined;
+            return true;
+        }
     }
     
     async transformMarkdown() {
